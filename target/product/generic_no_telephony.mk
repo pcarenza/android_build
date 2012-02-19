@@ -45,7 +45,13 @@ PRODUCT_PACKAGES := \
     SyncProvider \
     bluetooth-health \
     hostapd \
-    wpa_supplicant.conf
+    wpa_supplicant.conf \
+    busybox \
+    rsync \
+    libncurses \
+    nano \
+    lsof \
+    bash 
 
 PRODUCT_PACKAGES += \
     icu.dat
