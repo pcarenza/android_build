@@ -35,6 +35,7 @@ PRODUCT_PACKAGES := \
     XenonWallpapers \
     FileManager \
     DSPManager \
+    MusicFX \
     Provision \
     Phone \
     Settings \
