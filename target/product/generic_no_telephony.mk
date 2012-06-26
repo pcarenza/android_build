@@ -36,6 +36,7 @@ PRODUCT_PACKAGES := \
     FileManager \
     DSPManager \
     MusicFX \
+    Apollo \
     Provision \
     Phone \
     Settings \
