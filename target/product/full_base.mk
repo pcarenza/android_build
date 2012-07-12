@@ -32,14 +32,13 @@ PRODUCT_PACKAGES += \
     HoloSpiralWallpaper \
     LiveWallpapers \
     LiveWallpapersPicker \
-    MagicSmokeWallpapers \
     NoiseField \
-    PhaseBeam \
-    VisualizationWallpapers
+    PhaseBeam
+
 
 # Additional settings used in all AOSP builds
 PRODUCT_PROPERTY_OVERRIDES := \
-    ro.com.android.dateformat=MM-dd-yyyy \
+    ro.com.android.dateformat=dd-MM-yyyy \
     ro.config.ringtone=Girtab.ogg \
     ro.config.notification_sound=Proxima.ogg
 
