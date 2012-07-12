@@ -387,7 +387,7 @@ def WriteFullOTAPackage(input_zip, output_zip):
   script.Print("************************************************")
   script.Print("*                                              *")
   script.Print("*              Team Horizon Presents           *")
-  script.Print("*                   Xenon HD                   *")
+  script.Print("*                  XenonHD JB                  *")
   script.Print("*             Ice & Fire    Adam80460          *")
   script.Print("*                                              *")
   script.Print("************************************************")
