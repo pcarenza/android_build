@@ -31,6 +31,10 @@ PRODUCT_PACKAGES := \
     InputDevices \
     LatinIME \
     Launcher2 \
+    Torch \
+    XenonWallpapers \
+    FileManager \
+    DSPManager \
     Music \
     MusicFX \
     Provision \
