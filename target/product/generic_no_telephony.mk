@@ -24,6 +24,7 @@ PRODUCT_PACKAGES := \
     Bluetooth \
     Calculator \
     Calendar \
+    Gallery2 \
     CertInstaller \
     DrmProvider \
     Email \
@@ -35,8 +36,7 @@ PRODUCT_PACKAGES := \
     XenonWallpapers \
     FileManager \
     DSPManager \
-    Music \
-    MusicFX \
+    Apollo \
     Provision \
     Phone \
     Settings \
