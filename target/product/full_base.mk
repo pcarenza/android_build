@@ -48,6 +48,9 @@ PRODUCT_LOCALES := en_US
 # Get some sounds
 $(call inherit-product-if-exists, frameworks/base/data/sounds/AudioPackage7.mk)
 
+# Include video prebuilts
+$(call inherit-product-if-exists, frameworks/base/data/videos/VideoPackage2.mk)
+
 # Get the TTS language packs
 $(call inherit-product-if-exists, external/svox/pico/lang/all_pico_languages.mk)
 
