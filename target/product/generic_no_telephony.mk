@@ -37,6 +37,7 @@ PRODUCT_PACKAGES := \
     FileManager \
     DSPManager \
     Apollo \
+    ROMControl \
     Provision \
     Phone \
     Settings \
