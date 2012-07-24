@@ -24,25 +24,34 @@ PRODUCT_PACKAGES := \
     Bluetooth \
     Calculator \
     Calendar \
+    Gallery2 \
     CertInstaller \
     DrmProvider \
     Email \
     Exchange2 \
-    Gallery2 \
     InputDevices \
     LatinIME \
     Launcher2 \
-    Music \
-    MusicFX \
+    Torch \
+    XenonWallpapers \
+    FileManager \
+    DSPManager \
+    Apollo \
+    ROMControl \
     Provision \
     Phone \
-    QuickSearchBox \
     Settings \
     SystemUI \
     CalendarProvider \
     bluetooth-health \
     hostapd \
-    wpa_supplicant.conf
+    wpa_supplicant.conf \
+    busybox \
+    rsync \
+    libncurses \
+    nano \
+    lsof \
+    bash 
 
 PRODUCT_PACKAGES += \
     icu.dat
