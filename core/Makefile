@@ -1187,6 +1187,12 @@ INTERNAL_OTA_PACKAGE_TARGET := $(PRODUCT_OUT)/$(name).zip
 
 $(INTERNAL_OTA_PACKAGE_TARGET): KEY_CERT_PAIR := $(DEFAULT_KEY_CERT_PAIR)
 
+ifeq ($(TARGET_RELEASETOOL_OTA_FROM_TARGET_SCRIPT),)
+    OTA_FROM_TARGET_SCRIPT := ./build/tools/releasetools/ota_from_target_files
+else
+    OTA_FROM_TARGET_SCRIPT := $(TARGET_RELEASETOOL_OTA_FROM_TARGET_SCRIPT)
+endif
+
 ifeq ($(TARGET_OTA_ASSERT_SKIP),true)
     $(INTERNAL_OTA_PACKAGE_TARGET): skip_assert := true
 else
@@ -1195,7 +1201,7 @@ endif
 
 $(INTERNAL_OTA_PACKAGE_TARGET): $(BUILT_TARGET_FILES_PACKAGE) $(DISTTOOLS)
 	@echo "Package OTA: $@"
-	$(hide) ./build/tools/releasetools/ota_from_target_files -v \
+	$(OTA_FROM_TARGET_SCRIPT) -v \
 	   -p $(HOST_OUT) \
 	   -k $(KEY_CERT_PAIR) \
 	   --no_assert=$(skip_assert) \
