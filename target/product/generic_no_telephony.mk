@@ -26,6 +26,7 @@ PRODUCT_PACKAGES := \
     Calendar \
     CertInstaller \
     DrmProvider \
+	DSPManager \
     Email2 \
     Exchange2 \
     FusedLocation \
@@ -33,13 +34,12 @@ PRODUCT_PACKAGES := \
     InputDevices \
     LatinIME \
     Launcher2 \
-    Music \
     MusicFX \
     Provision \
     Phone \
-    QuickSearchBox \
     Settings \
     SystemUI \
+	XenonWallpapers \
     CalendarProvider \
     bluetooth-health \
     hostapd \
