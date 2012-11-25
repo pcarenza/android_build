@@ -20,11 +20,13 @@
 PRODUCT_POLICY := android.policy_phone
 
 PRODUCT_PACKAGES := \
+	Apollo \
     DeskClock \
     Bluetooth \
     Calculator \
     Calendar \
     CertInstaller \
+	CMFileManager \
     DrmProvider \
 	DSPManager \
     Email2 \
