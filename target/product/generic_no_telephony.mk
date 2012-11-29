@@ -29,6 +29,7 @@ PRODUCT_PACKAGES := \
 	CMFileManager \
     DrmProvider \
 	DSPManager \
+	Email \
     Email2 \
     Exchange2 \
     FusedLocation \
@@ -39,8 +40,10 @@ PRODUCT_PACKAGES := \
     MusicFX \
     Provision \
     Phone \
+	ROMControl \
     Settings \
     SystemUI \
+	Torch \
 	XenonWallpapers \
     CalendarProvider \
     bluetooth-health \
