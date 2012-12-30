@@ -28,7 +28,6 @@ PRODUCT_PACKAGES := \
     CertInstaller \
 	CMFileManager \
     DrmProvider \
-	DSPManager \
 	Email \
     Email2 \
     Exchange2 \
