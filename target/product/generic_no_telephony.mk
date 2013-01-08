@@ -35,7 +35,8 @@ PRODUCT_PACKAGES := \
     Gallery2 \
     InputDevices \
     LatinIME \
-    Launcher2 \
+    Onager \
+	LockClock \
     MusicFX \
     Provision \
     Phone \
