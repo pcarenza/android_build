@@ -40,7 +40,7 @@ PRODUCT_PACKAGES := \
     MusicFX \
     Provision \
     Phone \
-	ROMControl \
+	ROMSettings \
     Settings \
     SystemUI \
 	Torch \
