@@ -30,8 +30,9 @@ PRODUCT_PACKAGES += \
     LiveWallpapers \
     LiveWallpapersPicker \
     NoiseField \
-    PhaseBeam
-
+    PhaseBeam \
+    VisualizationWallpapers \
+    PhotoTable
 
 # Additional settings used in all AOSP builds
 PRODUCT_PROPERTY_OVERRIDES := \
