@@ -19,6 +19,8 @@
 
 PRODUCT_POLICY := android.policy_phone
 
+SUPERUSER_EMBEDDED := true
+
 PRODUCT_PACKAGES := \
 	Apollo \
     DeskClock \
@@ -42,6 +44,8 @@ PRODUCT_PACKAGES := \
     Phone \
 	ROMSettings \
     Settings \
+    Superuser \
+    su \
     SystemUI \
 	Torch \
 	XenonWallpapers \
