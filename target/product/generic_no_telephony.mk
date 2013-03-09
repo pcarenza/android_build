@@ -19,16 +19,12 @@
 
 PRODUCT_POLICY := android.policy_phone
 
-SUPERUSER_EMBEDDED := true
-
 PRODUCT_PACKAGES := \
-	Apollo \
     DeskClock \
     Bluetooth \
     Calculator \
     Calendar \
     CertInstaller \
-	CMFileManager \
     DrmProvider \
 	Email \
     Email2 \
@@ -37,18 +33,11 @@ PRODUCT_PACKAGES := \
     Gallery2 \
     InputDevices \
     LatinIME \
-    Onager \
-	LockClock \
     MusicFX \
     Provision \
     Phone \
-	ROMSettings \
     Settings \
-    Superuser \
-    su \
     SystemUI \
-	Torch \
-	XenonWallpapers \
     CalendarProvider \
     bluetooth-health \
     hostapd \
