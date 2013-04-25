@@ -126,7 +126,7 @@ function setpaths()
     case $ARCH in
         x86) toolchaindir=x86/i686-linux-android-4.6/bin
             ;;
-        arm) toolchaindir=arm/arm-linux-androideabi-4.6/bin
+        arm) toolchaindir=linaro/bin
             ;;
         mips) toolchaindir=mips/mipsel-linux-android-4.6/bin
             ;;
@@ -490,7 +490,7 @@ function breakfast()
             # A buildtype was specified, assume a full device name
             lunch $target
         else
-            # This is probably just the AOKP model name
+            # This is probably just the XenonHD model name
             lunch xenonhd_$target-userdebug
         fi
     fi
@@ -1195,7 +1195,7 @@ function mka() {
 function mbot() {
     unset LUNCH_MENU_CHOICES
     croot
-    ./vendor/aokp/bot/deploy.sh
+    ./vendor/xenonhd/bot/deploy.sh
 }
 
 function mkapush() {
