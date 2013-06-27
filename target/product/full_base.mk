@@ -39,7 +39,7 @@ PRODUCT_PACKAGES += \
     PhaseBeam \
     VisualizationWallpapers \
     PhotoTable \
-    SunBeam\
+    SunBeam
 
 PRODUCT_PACKAGES += \
     libvideoeditor_jni \
