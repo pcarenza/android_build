@@ -17,6 +17,7 @@ Invoke ". build/envsetup.sh" from your shell to add the following functions to y
 - mbot:     Builds for all devices using the psuedo buildbot
 - mkapush:  Same as mka with the addition of adb pushing to the device.
 - reposync: Parallel repo sync using ionice and SCHED_BATCH
+- pushboot:Push a file from your OUT dir to your phone and reboots it, using absolute path.
 
 Look at the source to view more functions. The complete list is:
 EOF
@@ -61,6 +62,14 @@ function check_product()
         echo "Couldn't locate the top of the tree.  Try setting TOP." >&2
         return
     fi
+
+    if (echo -n $1 | grep -q -e "^custom_") ; then
+       CUSTOM_BUILD=$(echo -n $1 | sed -e 's/^custom_//g')
+    else
+       CUSTOM_BUILD=
+    fi
+    export CUSTOM_BUILD
+
     CALLED_FROM_SETUP=true BUILD_SYSTEM=build/core \
         TARGET_PRODUCT=$1 \
         TARGET_BUILD_VARIANT= \
@@ -459,6 +468,10 @@ function print_lunch_menu()
        echo "... and don't forget the bacon!"
     fi
 
+	if [ "z${XENONHD_DEVICES_ONLY}" != "z" ]; then
+       echo "... and don't forget the bacon!"
+    fi
+
     echo
 }
 
@@ -574,6 +587,8 @@ function lunch()
 
     echo
 
+    fixup_common_out_dir
+
     set_stuff_for_environment
     printconfig
 }
@@ -628,6 +643,21 @@ function tapas()
 
     set_stuff_for_environment
     printconfig
+}
+
+function pushboot() {
+    if [ ! -f $OUT/$* ]; then
+        echo "File not found: $OUT/$*"
+        return 1
+    fi
+
+    adb root
+    sleep 1
+    adb wait-for-device
+    adb remount
+
+    adb push $OUT/$* /$*
+    adb reboot
 }
 
 function gettop
@@ -693,6 +723,9 @@ function mm()
         # Find the closest Android.mk file.
         T=$(gettop)
         local M=$(findmakefile)
+        local MODULES=
+        local GET_INSTALL_PATH=
+        local ARGS=
         # Remove the path to top as the makefilepath needs to be relative
         local M=`echo $M|sed 's:'$T'/::'`
         if [ ! "$T" ]; then
@@ -700,7 +733,19 @@ function mm()
         elif [ ! "$M" ]; then
             echo "Couldn't locate a makefile from the current directory."
         else
-            ONE_SHOT_MAKEFILE=$M make -C $T -f build/core/main.mk all_modules $@
+            for ARG in $@; do
+                case $ARG in
+                  GET-INSTALL-PATH) GET_INSTALL_PATH=$ARG;;
+                esac
+            done
+            if [ -n "$GET_INSTALL_PATH" ]; then
+              MODULES=
+              ARGS=GET-INSTALL-PATH
+            else
+              MODULES=all_modules
+              ARGS=$@
+            fi
+            ONE_SHOT_MAKEFILE=$M make -C $T -f build/core/main.mk $MODULES $ARGS
         fi
     fi
 }
@@ -713,6 +758,7 @@ function mmm()
         local MODULES=
         local ARGS=
         local DIR TO_CHOP
+        local GET_INSTALL_PATH=
         local DASH_ARGS=$(echo "$@" | awk -v RS=" " -v ORS=" " '/^-.*$/')
         local DIRS=$(echo "$@" | awk -v RS=" " -v ORS=" " '/^[^-].*$/')
         for DIR in $DIRS ; do
@@ -722,10 +768,10 @@ function mmm()
             fi
             DIR=`echo $DIR | sed -e 's/:.*//' -e 's:/$::'`
             if [ -f $DIR/Android.mk ]; then
-                TO_CHOP=`(\cd -P -- $T && pwd -P) | wc -c | tr -d ' '`
-                TO_CHOP=`expr $TO_CHOP + 1`
-                START=`PWD= /bin/pwd`
-                MFILE=`echo $START | cut -c${TO_CHOP}-`
+                local TO_CHOP=`(\cd -P -- $T && pwd -P) | wc -c | tr -d ' '`
+                local TO_CHOP=`expr $TO_CHOP + 1`
+                local START=`PWD= /bin/pwd`
+                local MFILE=`echo $START | cut -c${TO_CHOP}-`
                 if [ "$MFILE" = "" ] ; then
                     MFILE=$DIR/Android.mk
                 else
@@ -733,20 +779,17 @@ function mmm()
                 fi
                 MAKEFILE="$MAKEFILE $MFILE"
             else
-                if [ "$DIR" = snod ]; then
-                    ARGS="$ARGS snod"
-                elif [ "$DIR" = showcommands ]; then
-                    ARGS="$ARGS showcommands"
-                elif [ "$DIR" = dist ]; then
-                    ARGS="$ARGS dist"
-                elif [ "$DIR" = incrementaljavac ]; then
-                    ARGS="$ARGS incrementaljavac"
-                else
-                    echo "No Android.mk in $DIR."
-                    return 1
-                fi
+                case $DIR in
+                  showcommands | snod | dist | incrementaljavac) ARGS="$ARGS $DIR";;
+                  GET-INSTALL-PATH) GET_INSTALL_PATH=$DIR;;
+                  *) echo "No Android.mk in $DIR."; return 1;;
+                esac
             fi
         done
+        if [ -n "$GET_INSTALL_PATH" ]; then
+          ARGS=$GET_INSTALL_PATH
+          MODULES=
+        fi
         ONE_SHOT_MAKEFILE="$MAKEFILE" make -C $T -f build/core/main.mk $DASH_ARGS $MODULES $ARGS
     else
         echo "Couldn't locate the top of the tree.  Try setting TOP."
@@ -829,15 +872,50 @@ function cproj()
     echo "can't find Android.mk"
 }
 
+# simplified version of ps; output in the form
+# <pid> <procname>
+function qpid() {
+    local prepend=''
+    local append=''
+    if [ "$1" = "--exact" ]; then
+        prepend=' '
+        append='$'
+        shift
+    elif [ "$1" = "--help" -o "$1" = "-h" ]; then
+		echo "usage: qpid [[--exact] <process name|pid>"
+		return 255
+	fi
+
+    local EXE="$1"
+    if [ "$EXE" ] ; then
+		qpid | \grep "$prepend$EXE$append"
+	else
+		adb shell ps \
+			| tr -d '\r' \
+			| sed -e 1d -e 's/^[^ ]* *\([0-9]*\).* \([^ ]*\)$/\1 \2/'
+	fi
+}
+
 function pid()
 {
-   local EXE="$1"
-   if [ "$EXE" ] ; then
-       local PID=`adb shell ps | fgrep $1 | sed -e 's/[^ ]* *\([0-9]*\).*/\1/'`
-       echo "$PID"
-   else
-       echo "usage: pid name"
-   fi
+    local prepend=''
+    local append=''
+    if [ "$1" = "--exact" ]; then
+        prepend=' '
+        append='$'
+        shift
+    fi
+    local EXE="$1"
+    if [ "$EXE" ] ; then
+        local PID=`adb shell ps \
+            | tr -d '\r' \
+            | \grep "$prepend$EXE$append" \
+            | sed -e 's/^[^ ]* *\([0-9]*\).*$/\1/'`
+        echo "$PID"
+    else
+        echo "usage: pid [--exact] <process name>"
+		return 255
+    fi
 }
 
 # systemstack - dump the current stack trace of all threads in the system process
@@ -852,31 +930,45 @@ function stacks()
     if [[ $1 =~ ^[0-9]+$ ]] ; then
         local PID="$1"
     elif [ "$1" ] ; then
-        local PID=$(pid $1)
+        local PIDLIST="$(pid $1)"
+        if [[ $PIDLIST =~ ^[0-9]+$ ]] ; then
+            local PID="$PIDLIST"
+        elif [ "$PIDLIST" ] ; then
+            echo "more than one process: $1"
+        else
+            echo "no such process: $1"
+        fi
     else
         echo "usage: stacks [pid|process name]"
     fi
 
     if [ "$PID" ] ; then
-        local TRACES=/data/anr/traces.txt
-        local ORIG=/data/anr/traces.orig
-        local TMP=/data/anr/traces.tmp
+        # Determine whether the process is native
+        if adb shell ls -l /proc/$PID/exe | grep -q /system/bin/app_process ; then
+            # Dump stacks of Dalvik process
+            local TRACES=/data/anr/traces.txt
+            local ORIG=/data/anr/traces.orig
+            local TMP=/data/anr/traces.tmp
 
-        # Keep original traces to avoid clobbering
-        adb shell mv $TRACES $ORIG
+            # Keep original traces to avoid clobbering
+            adb shell mv $TRACES $ORIG
 
-        # Make sure we have a usable file
-        adb shell touch $TRACES
-        adb shell chmod 666 $TRACES
+            # Make sure we have a usable file
+            adb shell touch $TRACES
+            adb shell chmod 666 $TRACES
 
-        # Dump stacks and wait for dump to finish
-        adb shell kill -3 $PID
-        adb shell notify $TRACES
+            # Dump stacks and wait for dump to finish
+            adb shell kill -3 $PID
+            adb shell notify $TRACES >/dev/null
 
-        # Restore original stacks, and show current output
-        adb shell mv $TRACES $TMP
-        adb shell mv $ORIG $TRACES
-        adb shell cat $TMP | less -S
+            # Restore original stacks, and show current output
+            adb shell mv $TRACES $TMP
+            adb shell mv $ORIG $TRACES
+            adb shell cat $TMP
+        else
+            # Dump stacks of native process
+            adb shell debuggerd -b $PID
+        fi
     fi
 }
 
@@ -923,7 +1015,7 @@ function gdbclient()
                if [[ ! "$PID" =~ ^[0-9]+$ ]] ; then
                    # that likely didn't work because of returning multiple processes
                    # try again, filtering by root processes (don't contain colon)
-                   PID=`adb shell ps | grep $3 | grep -v ":" | awk '{print $2}'`
+                   PID=`adb shell ps | \grep $3 | \grep -v ":" | awk '{print $2}'`
                    if [[ ! "$PID" =~ ^[0-9]+$ ]]
                    then
                        echo "Couldn't resolve '$3' to single PID"
@@ -949,6 +1041,7 @@ function gdbclient()
 
        echo >|"$OUT_ROOT/gdbclient.cmds" "set solib-absolute-prefix $OUT_SYMBOLS"
        echo >>"$OUT_ROOT/gdbclient.cmds" "set solib-search-path $OUT_SO_SYMBOLS:$OUT_SO_SYMBOLS/hw:$OUT_SO_SYMBOLS/ssl/engines:$OUT_SO_SYMBOLS/drm:$OUT_SO_SYMBOLS/egl:$OUT_SO_SYMBOLS/soundfx"
+       echo >>"$OUT_ROOT/gdbclient.cmds" "source $ANDROID_BUILD_TOP/development/scripts/gdb/dalvik.gdb"
        echo >>"$OUT_ROOT/gdbclient.cmds" "target remote $PORT"
        echo >>"$OUT_ROOT/gdbclient.cmds" ""
 
@@ -1115,7 +1208,7 @@ function runhat()
     fi
 
     # issue "am" command to cause the hprof dump
-    local sdcard=$(adb shell echo -n '$EXTERNAL_STORAGE')
+    local sdcard=$(adb ${adbOptions} shell echo -n '$EXTERNAL_STORAGE')
     local devFile=$sdcard/hprof-$targetPid
     #local devFile=/data/local/hprof-$targetPid
     echo "Poking $targetPid and waiting for data..."
@@ -1293,7 +1386,7 @@ function mka() {
             make -j `sysctl hw.ncpu|cut -d" " -f2` "$@"
             ;;
         *)
-            schedtool -B -n 1 -e ionice -n 1 make -j$(cat /proc/cpuinfo | grep "^processor" | wc -l) "$@"
+            schedtool -B -n 1 -e ionice -n 1 make -j `cat /proc/cpuinfo | grep "^processor" | wc -l` "$@"
             ;;
     esac
 }
@@ -1315,9 +1408,9 @@ function mkapush() {
             ;;
         *)
             if [ ! -f $ANDROID_PRODUCT_OUT/installed-files.txt ]; then
-                schedtool -B -n 1 -e ionice -n 1 make -j$(cat /proc/cpuinfo | grep "^processor" | wc -l) installed-file-list
+                schedtool -B -n 1 -e ionice -n 1 make -j `cat /proc/cpuinfo | grep "^processor" | wc -l` installed-file-list
             fi
-            schedtool -B -n 1 -e ionice -n 1 make -j$(cat /proc/cpuinfo | grep "^processor" | wc -l) "$@"
+            schedtool -B -n 1 -e ionice -n 1 make -j `cat /proc/cpuinfo | grep "^processor" | wc -l` "$@"
             ;;
     esac
     case $@ in
@@ -1359,12 +1452,30 @@ function mkapush() {
 function reposync() {
     case `uname -s` in
         Darwin)
-            repo sync -j `sysctl hw.ncpu|cut -d" " -f2` "$@"
+            repo sync -j 4 "$@"
             ;;
         *)
-            schedtool -B -n 1 -e ionice -n 1 repo sync -j $(cat /proc/cpuinfo | grep "^processor" | wc -l) "$@"
+            schedtool -B -n 1 -e ionice -n 1 repo sync -j 4 "$@"
             ;;
     esac
+}
+
+function fixup_common_out_dir() {
+    common_out_dir=$(get_build_var OUT_DIR)/target/common
+    target_device=$(get_build_var TARGET_DEVICE)
+    if [ ! -z $ANDROID_FIXUP_COMMON_OUT ]; then
+        if [ -d ${common_out_dir} ] && [ ! -L ${common_out_dir} ]; then
+            mv ${common_out_dir} ${common_out_dir}-${target_device}
+            ln -s ${common_out_dir}-${target_device} ${common_out_dir}
+        else
+            [ -L ${common_out_dir} ] && rm ${common_out_dir}
+            mkdir -p ${common_out_dir}-${target_device}
+            ln -s ${common_out_dir}-${target_device} ${common_out_dir}
+        fi
+    else
+        [ -L ${common_out_dir} ] && rm ${common_out_dir}
+        mkdir -p ${common_out_dir}
+    fi
 }
 
 # Force JAVA_HOME to point to java 1.6 if it isn't already set
@@ -1380,6 +1491,13 @@ function set_java_home() {
         esac
     fi
 }
+
+function repopick() {
+    set_stuff_for_environment
+    T=$(gettop)
+    $T/build/tools/repopick.py $@
+}
+
 
 # Print colored exit condition
 function pez {
@@ -1405,7 +1523,8 @@ if [ "x$SHELL" != "x/bin/bash" ]; then
 fi
 
 # Execute the contents of any vendorsetup.sh files we can find.
-for f in `/bin/ls vendor/*/vendorsetup.sh vendor/*/*/vendorsetup.sh device/*/*/vendorsetup.sh 2> /dev/null`
+for f in `test -d device && find device -maxdepth 4 -name 'vendorsetup.sh' 2> /dev/null` \
+         `test -d vendor && find vendor -maxdepth 4 -name 'vendorsetup.sh' 2> /dev/null`
 do
     echo "including $f"
     . $f
